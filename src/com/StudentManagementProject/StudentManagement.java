@@ -56,7 +56,7 @@ public class StudentManagement {
     }
 
     private void initialize() {
-        frame = new JFrame("Student Management — Modern UI (fields: id,name,gender,DOB,age,email,phone,address,father_name,course,semester)");
+        frame = new JFrame("Student Management");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1100, 640);
         frame.setLocationRelativeTo(null);
