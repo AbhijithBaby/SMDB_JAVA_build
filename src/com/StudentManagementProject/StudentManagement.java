@@ -1,4 +1,5 @@
-package com.StudentManagementProject ;
+package com.StudentManagementProject;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.time.LocalDate;
@@ -10,27 +11,35 @@ import javax.swing.event.*;
 import javax.swing.table.DefaultTableModel;
 
 /**
- * Updated StudentManagement UI with fields:
- * id, name, gender, DOB, age, email, phone, address, father_name, course, semester
+ * StudentManagement.java (Modernized Version)
+ * -------------------------------------------
+ * A clean and modernized Student Management UI built with Java Swing.
+ * This program connects to a SQLite database (via Database.java) to perform
+ * CRUD operations (Create, Read, Update, Delete) for student data.
  *
- * Does NOT change Database.java — maps fields into existing Database methods.
+ * Fields managed:
+ *  id, name, gender, DOB, age, email, phone, address, father_name, course, semester
+ *
+ * NOTE: This class does NOT modify Database.java — it uses existing methods.
  */
 public class StudentManagement {
 
-    private JFrame frame;
+    // --- Core Components ---
+    private JFrame frame; // main window
     private JTextField idField, nameField, dobField, ageField, emailField, phoneField, fatherField, searchField;
     private JTextArea addressArea;
     private JComboBox<String> genderCombo, courseCombo, semesterCombo;
     private JTable table;
     private DefaultTableModel model;
 
-    // Date pattern used for DOB parsing/display. Keep consistent with how you store DOB in DB.
+    // --- Date Format ---
     private static final DateTimeFormatter DOB_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    // --- Entry Point ---
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
             try {
-                // Nimbus L&F for modern look
+                // Apply Nimbus Look & Feel for a modern UI appearance
                 for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                     if ("Nimbus".equals(info.getName())) {
                         UIManager.setLookAndFeel(info.getClassName());
@@ -40,7 +49,8 @@ public class StudentManagement {
             } catch (Exception ignored) {}
 
             try {
-                Database.dbInit(); // keep Database.java untouched
+                // Initialize database connection and launch UI
+                Database.dbInit();
                 StudentManagement window = new StudentManagement();
                 window.frame.setVisible(true);
                 window.loadAllStudents();
@@ -51,16 +61,19 @@ public class StudentManagement {
         });
     }
 
+    // --- Constructor ---
     public StudentManagement() {
         initialize();
     }
 
+    // --- Initialize the UI ---
     private void initialize() {
-        frame = new JFrame("Student Management");
+        frame = new JFrame("Student Management System");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1100, 640);
         frame.setLocationRelativeTo(null);
 
+        // SplitPane divides form (left) and table (right)
         JSplitPane split = new JSplitPane();
         split.setDividerLocation(420);
         frame.getContentPane().add(split, BorderLayout.CENTER);
@@ -69,204 +82,146 @@ public class StudentManagement {
         split.setRightComponent(buildTablePanel());
     }
 
+    /**
+     * Build the LEFT section — student input form.
+     */
     private JPanel buildFormPanel() {
         JPanel p = new JPanel(new GridBagLayout());
         p.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(6,6,6,6);
+        gbc.insets = new Insets(6, 6, 6, 6);
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        int y = 0;
+        int y = 0; // row tracker
 
-        // Row helper
-        JLabel lbl;
-        gbc.gridx = 0; gbc.gridy = y; gbc.weightx = 0.0;
-        lbl = new JLabel("Student ID:");
-        p.add(lbl, gbc);
+        // --- ID Field ---
+        p.add(new JLabel("Student ID:"), gbcPos(gbc, 0, y));
         idField = new JTextField();
-        gbc.gridx = 1; gbc.gridy = y++; gbc.weightx = 1.0;
-        p.add(idField, gbc);
+        p.add(idField, gbcPos(gbc, 1, y++));
 
-        gbc.gridx = 0; gbc.gridy = y; gbc.weightx = 0.0;
-        p.add(new JLabel("Name:"), gbc);
+        // --- Name ---
+        p.add(new JLabel("Name:"), gbcPos(gbc, 0, y));
         nameField = new JTextField();
-        gbc.gridx = 1; gbc.gridy = y++; gbc.weightx = 1.0;
-        p.add(nameField, gbc);
+        p.add(nameField, gbcPos(gbc, 1, y++));
 
-        gbc.gridx = 0; gbc.gridy = y;
-        p.add(new JLabel("Father's Name:"), gbc);
+        // --- Father's Name ---
+        p.add(new JLabel("Father's Name:"), gbcPos(gbc, 0, y));
         fatherField = new JTextField();
-        gbc.gridx = 1; gbc.gridy = y++; 
-        p.add(fatherField, gbc);
+        p.add(fatherField, gbcPos(gbc, 1, y++));
 
-        gbc.gridx = 0; gbc.gridy = y;
-        p.add(new JLabel("Gender:"), gbc);
-        genderCombo = new JComboBox<>(new String[] {"Male","Female","Other"});
-        gbc.gridx = 1; gbc.gridy = y++;
-        p.add(genderCombo, gbc);
+        // --- Gender ---
+        p.add(new JLabel("Gender:"), gbcPos(gbc, 0, y));
+        genderCombo = new JComboBox<>(new String[]{"Male", "Female", "Other"});
+        p.add(genderCombo, gbcPos(gbc, 1, y++));
 
-        gbc.gridx = 0; gbc.gridy = y;
-        p.add(new JLabel("Date of Birth (YYYY-MM-DD):"), gbc);
+        // --- DOB ---
+        p.add(new JLabel("Date of Birth (YYYY-MM-DD):"), gbcPos(gbc, 0, y));
         dobField = new JTextField();
-        dobField.setToolTipText("Format: yyyy-MM-dd (e.g. 2003-05-21)");
-        gbc.gridx = 1; gbc.gridy = y++;
-        p.add(dobField, gbc);
+        dobField.setToolTipText("Example: 2003-05-21");
+        p.add(dobField, gbcPos(gbc, 1, y++));
 
-        gbc.gridx = 0; gbc.gridy = y;
-        p.add(new JLabel("Age:"), gbc);
+        // --- Age (auto-calculated) ---
+        p.add(new JLabel("Age:"), gbcPos(gbc, 0, y));
         ageField = new JTextField();
         ageField.setEditable(false);
-        gbc.gridx = 1; gbc.gridy = y++;
-        p.add(ageField, gbc);
+        p.add(ageField, gbcPos(gbc, 1, y++));
 
-        // compute age when dob changes (on focus lost and on typing)
+        // Automatically compute age when DOB changes
         dobField.addFocusListener(new FocusAdapter() {
             public void focusLost(FocusEvent e) { computeAndSetAge(); }
         });
-        dobField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { computeAndSetAge(); }
-            public void removeUpdate(DocumentEvent e) { computeAndSetAge(); }
-            public void changedUpdate(DocumentEvent e) { computeAndSetAge(); }
-        });
+        dobField.getDocument().addDocumentListener(new SimpleDocListener(this::computeAndSetAge));
 
-        gbc.gridx = 0; gbc.gridy = y;
-        p.add(new JLabel("Email:"), gbc);
+        // --- Email ---
+        p.add(new JLabel("Email:"), gbcPos(gbc, 0, y));
         emailField = new JTextField();
-        gbc.gridx = 1; gbc.gridy = y++;
-        p.add(emailField, gbc);
+        p.add(emailField, gbcPos(gbc, 1, y++));
 
-        gbc.gridx = 0; gbc.gridy = y;
-        p.add(new JLabel("Phone:"), gbc);
+        // --- Phone ---
+        p.add(new JLabel("Phone:"), gbcPos(gbc, 0, y));
         phoneField = new JTextField();
-        gbc.gridx = 1; gbc.gridy = y++;
-        p.add(phoneField, gbc);
+        p.add(phoneField, gbcPos(gbc, 1, y++));
 
-        gbc.gridx = 0; gbc.gridy = y;
-        p.add(new JLabel("Course:"), gbc);
-        // example course combo; you can change / add entries as needed
-        courseCombo = new JComboBox<>(new String[] {"B.Tech - CSE","B.Tech - ECE","B.Sc","MCA","M.Tech"});
+        // --- Course ---
+        p.add(new JLabel("Course:"), gbcPos(gbc, 0, y));
+        courseCombo = new JComboBox<>(new String[]{"B.Tech - CSE", "B.Tech - ECE", "B.Sc", "MCA", "M.Tech"});
         courseCombo.setEditable(true);
-        gbc.gridx = 1; gbc.gridy = y++;
-        p.add(courseCombo, gbc);
+        p.add(courseCombo, gbcPos(gbc, 1, y++));
 
-        gbc.gridx = 0; gbc.gridy = y;
-        p.add(new JLabel("Semester:"), gbc);
-        semesterCombo = new JComboBox<>(new String[] {"1","2","3","4","5","6","7","8"});
-        gbc.gridx = 1; gbc.gridy = y++;
-        p.add(semesterCombo, gbc);
+        // --- Semester ---
+        p.add(new JLabel("Semester:"), gbcPos(gbc, 0, y));
+        semesterCombo = new JComboBox<>(new String[]{"1", "2", "3", "4", "5", "6", "7", "8"});
+        p.add(semesterCombo, gbcPos(gbc, 1, y++));
 
-        gbc.gridx = 0; gbc.gridy = y; gbc.anchor = GridBagConstraints.NORTHWEST;
-        p.add(new JLabel("Address:"), gbc);
+        // --- Address ---
+        p.add(new JLabel("Address:"), gbcPos(gbc, 0, y));
         addressArea = new JTextArea(5, 20);
         addressArea.setLineWrap(true);
         addressArea.setWrapStyleWord(true);
-        gbc.gridx = 1; gbc.gridy = y++; gbc.fill = GridBagConstraints.BOTH;
-        p.add(new JScrollPane(addressArea), gbc);
-        gbc.fill = GridBagConstraints.HORIZONTAL; gbc.anchor = GridBagConstraints.WEST;
+        p.add(new JScrollPane(addressArea), gbcPos(gbc, 1, y++));
 
-        // Buttons
+        // --- Action Buttons ---
         JPanel btnRow = new JPanel();
-        JButton insertBtn = styledButton("Insert");
-        JButton updateBtn = styledButton("Update");
-        JButton deleteBtn = styledButton("Delete Selected");
-        JButton clearBtn = styledButton("Clear");
-
+        JButton insertBtn = styledButton("Insert"), updateBtn = styledButton("Update"), deleteBtn = styledButton("Delete"), clearBtn = styledButton("Clear");
         insertBtn.addActionListener(e -> onInsert());
         updateBtn.addActionListener(e -> onUpdate());
         deleteBtn.addActionListener(e -> onDeleteSelected());
         clearBtn.addActionListener(e -> clearForm());
-
-        btnRow.add(insertBtn);
-        btnRow.add(updateBtn);
-        btnRow.add(deleteBtn);
-        btnRow.add(clearBtn);
-
-        gbc.gridx = 0; gbc.gridy = y; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
-        p.add(btnRow, gbc);
+        btnRow.add(insertBtn); btnRow.add(updateBtn); btnRow.add(deleteBtn); btnRow.add(clearBtn);
+        p.add(btnRow, gbcPos(gbc, 0, y, 2));
 
         return p;
     }
 
+    /**
+     * Build the RIGHT section — student table and search bar.
+     */
     private JPanel buildTablePanel() {
-        JPanel p = new JPanel(new BorderLayout(8,8));
-        p.setBorder(BorderFactory.createEmptyBorder(12,12,12,12));
+        JPanel p = new JPanel(new BorderLayout(8, 8));
+        p.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
+        // Search toolbar
         JPanel toolbar = new JPanel();
         toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
         toolbar.add(new JLabel(" Search: "));
         searchField = new JTextField();
         toolbar.add(searchField);
-        toolbar.add(Box.createRigidArea(new Dimension(8,0)));
+        toolbar.add(Box.createRigidArea(new Dimension(8, 0)));
         JButton showAll = styledButton("Show All");
         toolbar.add(showAll);
         p.add(toolbar, BorderLayout.NORTH);
 
-        model = new DefaultTableModel();
-        // Do NOT hardcode columns that must match Database.fetchAllData.
-        // But to give a readable default, set typical column headers (Database.fetchAllData
-        // should overwrite/populate rows into this model).
-        model.addColumn("Id");
-        model.addColumn("Name");
-        model.addColumn("Father");
-        model.addColumn("DOB");
-        model.addColumn("Gender");
-        model.addColumn("Phone");
-        model.addColumn("Course");
-        model.addColumn("E-mail");
-        model.addColumn("Address");
-
+        // Table model and setup
+        model = new DefaultTableModel(new String[]{"ID", "Name", "Father", "DOB", "Gender", "Phone", "Course", "Email", "Address"}, 0);
         table = new JTable(model);
         table.setFillsViewportHeight(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         p.add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // Selection -> populate form
+        // Populate form when a table row is selected
         table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
-                int r = table.getSelectedRow();
-                idField.setText(stringAt(r,0));
-                nameField.setText(stringAt(r,1));
-                fatherField.setText(stringAt(r,2));
-                dobField.setText(stringAt(r,3));
-                // compute age from dob
-                computeAndSetAge();
-                genderCombo.setSelectedItem(stringAt(r,4).isEmpty() ? "Male" : stringAt(r,4));
-                phoneField.setText(stringAt(r,5));
-                String cs = stringAt(r,6);
-                if (!cs.isEmpty()) {
-                    // try split course/semester if saved as "Course - Sem X"
-                    courseCombo.setSelectedItem(cs);
-                }
-                emailField.setText(stringAt(r,7));
-                addressArea.setText(stringAt(r,8));
-            }
+            if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) populateFormFromTable();
         });
 
-        // Search live
-        searchField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { doSearch(); }
-            public void removeUpdate(DocumentEvent e) { doSearch(); }
-            public void changedUpdate(DocumentEvent e) { doSearch(); }
-            private void doSearch() {
-                String q = searchField.getText().trim();
-                if (q.isEmpty()) {
-                    // do nothing — user can press Show All
-                } else {
-                    try {
-                        Database.searchStudents(model, q);
-                    } catch (Exception ex) {
-                        showError("Search failed: " + ex.getMessage());
-                    }
-                }
-            }
-        });
-
+        // Search listener (live filtering)
+        searchField.getDocument().addDocumentListener(new SimpleDocListener(this::searchStudents));
         showAll.addActionListener(e -> loadAllStudents());
 
         return p;
     }
 
+    // --- Helper: GridBag Positioning ---
+    private GridBagConstraints gbcPos(GridBagConstraints gbc, int x, int y) {
+        gbc.gridx = x; gbc.gridy = y; gbc.gridwidth = 1; gbc.weightx = (x == 1 ? 1.0 : 0.0); gbc.fill = GridBagConstraints.HORIZONTAL;
+        return gbc;
+    }
+    private GridBagConstraints gbcPos(GridBagConstraints gbc, int x, int y, int width) {
+        gbc.gridx = x; gbc.gridy = y; gbc.gridwidth = width; gbc.weightx = 1.0; gbc.anchor = GridBagConstraints.CENTER;
+        return gbc;
+    }
+
+    // --- Button Styling ---
     private JButton styledButton(String text) {
         JButton b = new JButton(text);
         b.setFocusPainted(false);
@@ -274,128 +229,105 @@ public class StudentManagement {
         return b;
     }
 
-    private String stringAt(int row, int col) {
-        if (row < 0 || col < 0) return "";
-        Object v = null;
-        try { v = model.getValueAt(row, col); } catch (Exception e) { return ""; }
-        return v == null ? "" : v.toString();
-    }
+    // --- Core Logic Methods ---
 
+    /** Compute and set age based on DOB */
     private void computeAndSetAge() {
         String dobText = dobField.getText().trim();
         if (dobText.isEmpty()) { ageField.setText(""); return; }
         try {
             LocalDate dob = LocalDate.parse(dobText, DOB_FMT);
-            LocalDate now = LocalDate.now();
-            if (dob.isAfter(now)) { ageField.setText(""); return; }
-            int age = Period.between(dob, now).getYears();
+            int age = Period.between(dob, LocalDate.now()).getYears();
             ageField.setText(String.valueOf(age));
         } catch (DateTimeParseException ex) {
-            // Keep age blank if parsing fails — user can still insert; DB will validate if needed
-            ageField.setText("");
+            ageField.setText(""); // clear if invalid format
         }
     }
 
+    /** Populate form fields when a row is selected in the table */
+    private void populateFormFromTable() {
+        int r = table.getSelectedRow();
+        if (r < 0) return;
+        idField.setText(model.getValueAt(r, 0).toString());
+        nameField.setText(model.getValueAt(r, 1).toString());
+        fatherField.setText(model.getValueAt(r, 2).toString());
+        dobField.setText(model.getValueAt(r, 3).toString());
+        computeAndSetAge();
+        genderCombo.setSelectedItem(model.getValueAt(r, 4));
+        phoneField.setText(model.getValueAt(r, 5).toString());
+        courseCombo.setSelectedItem(model.getValueAt(r, 6));
+        emailField.setText(model.getValueAt(r, 7).toString());
+        addressArea.setText(model.getValueAt(r, 8).toString());
+    }
+
+    /** Insert a new student record */
     private void onInsert() {
-        String id = idField.getText().trim();
-        if (id.isEmpty()) { showError("Student ID required."); return; }
         try {
-            String name = nameField.getText().trim();
-            String father = fatherField.getText().trim();
-            String dob = dobField.getText().trim();
-            String gender = (String) genderCombo.getSelectedItem();
-            String phone = phoneField.getText().trim();
-            String course = courseCombo.getSelectedItem() == null ? "" : courseCombo.getSelectedItem().toString();
-            String semester = semesterCombo.getSelectedItem() == null ? "" : semesterCombo.getSelectedItem().toString();
-            String courseSem = course + " - " + semester;
-            String email = emailField.getText().trim();
-            String address = addressArea.getText().trim();
-
-            // Map fields to Database.insertStudent(...) signature used by the original tutorial
-            // Database.insertStudent(id,name,fatherName,dob,gender,contact,section,email,address)
-            Database.insertStudent(id, name, father, dob, gender, phone, courseSem, email, address);
-
+            Database.insertStudent(idField.getText(), nameField.getText(), fatherField.getText(), dobField.getText(),
+                    (String) genderCombo.getSelectedItem(), phoneField.getText(),
+                    courseCombo.getSelectedItem() + " - " + semesterCombo.getSelectedItem(),
+                    emailField.getText(), addressArea.getText());
             loadAllStudents();
-            showInfo("Inserted student.");
+            showInfo("Student added successfully!");
             clearForm();
-        } catch (Exception ex) {
-            showError("Insert failed: " + ex.getMessage());
-        }
+        } catch (Exception ex) { showError("Insert failed: " + ex.getMessage()); }
     }
 
+    /** Update existing student record */
     private void onUpdate() {
-        String id = idField.getText().trim();
-        if (id.isEmpty()) { showError("Student ID required for update."); return; }
         try {
-            String name = nameField.getText().trim();
-            String father = fatherField.getText().trim();
-            String dob = dobField.getText().trim();
-            String gender = (String) genderCombo.getSelectedItem();
-            String phone = phoneField.getText().trim();
-            String course = courseCombo.getSelectedItem() == null ? "" : courseCombo.getSelectedItem().toString();
-            String semester = semesterCombo.getSelectedItem() == null ? "" : semesterCombo.getSelectedItem().toString();
-            String courseSem = course + " - " + semester;
-            String email = emailField.getText().trim();
-            String address = addressArea.getText().trim();
-
-            // NOTE: This ordering matches the Database.updateStudent(...) call expected earlier:
-            // updateStudent(String id,String name,String fatherName,String contact,
-            //               String dob,String gender,String email, String section,String address)
-            Database.updateStudent(id, name, father, phone, dob, gender, email, courseSem, address);
-
+            Database.updateStudent(idField.getText(), nameField.getText(), fatherField.getText(), phoneField.getText(),
+                    dobField.getText(), (String) genderCombo.getSelectedItem(), emailField.getText(),
+                    courseCombo.getSelectedItem() + " - " + semesterCombo.getSelectedItem(), addressArea.getText());
             loadAllStudents();
-            showInfo("Student updated.");
-        } catch (Exception ex) {
-            showError("Update failed: " + ex.getMessage());
-        }
+            showInfo("Student updated successfully!");
+        } catch (Exception ex) { showError("Update failed: " + ex.getMessage()); }
     }
 
+    /** Delete selected student record */
     private void onDeleteSelected() {
         int sel = table.getSelectedRow();
-        if (sel == -1) { showError("Select a table row to delete."); return; }
-        String id = stringAt(sel, 0);
-        int confirm = JOptionPane.showConfirmDialog(frame, "Delete student with ID: " + id + " ?", "Confirm", JOptionPane.YES_NO_OPTION);
+        if (sel == -1) { showError("Please select a row to delete."); return; }
+        String id = model.getValueAt(sel, 0).toString();
+        int confirm = JOptionPane.showConfirmDialog(frame, "Delete student with ID: " + id + "?", "Confirm", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                Database.deleteStudent(id);
-                loadAllStudents();
-                showInfo("Student deleted.");
-            } catch (Exception ex) {
-                showError("Delete failed: " + ex.getMessage());
-            }
+            try { Database.deleteStudent(id); loadAllStudents(); showInfo("Deleted successfully!"); }
+            catch (Exception ex) { showError("Delete failed: " + ex.getMessage()); }
         }
     }
 
+    /** Load all students from DB into table */
     private void loadAllStudents() {
-        try {
-            // Let Database.fetchAllData populate the model (it expects a DefaultTableModel)
-            // If Database.fetchAllData assumes particular columns, it will fill them appropriately.
-            Database.fetchAllData(model);
-        } catch (Exception ex) {
-            showError("Failed loading students: " + ex.getMessage());
-        }
+        try { Database.fetchAllData(model); }
+        catch (Exception ex) { showError("Failed to load data: " + ex.getMessage()); }
     }
 
+    /** Search students based on query */
+    private void searchStudents() {
+        String q = searchField.getText().trim();
+        if (q.isEmpty()) return;
+        try { Database.searchStudents(model, q); }
+        catch (Exception ex) { showError("Search failed: " + ex.getMessage()); }
+    }
+
+    /** Clear all form fields */
     private void clearForm() {
-        idField.setText("");
-        nameField.setText("");
-        fatherField.setText("");
-        dobField.setText("");
-        ageField.setText("");
-        emailField.setText("");
-        phoneField.setText("");
-        addressArea.setText("");
-        genderCombo.setSelectedIndex(0);
-        courseCombo.setSelectedIndex(0);
-        semesterCombo.setSelectedIndex(0);
+        idField.setText(""); nameField.setText(""); fatherField.setText(""); dobField.setText(""); ageField.setText("");
+        emailField.setText(""); phoneField.setText(""); addressArea.setText("");
+        genderCombo.setSelectedIndex(0); courseCombo.setSelectedIndex(0); semesterCombo.setSelectedIndex(0);
         table.clearSelection();
     }
 
-    private void showError(String msg) {
-        JOptionPane.showMessageDialog(frame, msg, "Error", JOptionPane.ERROR_MESSAGE);
-    }
+    // --- Utility Dialogs ---
+    private void showError(String msg) { JOptionPane.showMessageDialog(frame, msg, "Error", JOptionPane.ERROR_MESSAGE); }
+    private void showInfo(String msg) { JOptionPane.showMessageDialog(frame, msg, "Info", JOptionPane.INFORMATION_MESSAGE); }
 
-    private void showInfo(String msg) {
-        JOptionPane.showMessageDialog(frame, msg, "Info", JOptionPane.INFORMATION_MESSAGE);
+    // --- Inner Helper Class: SimpleDocListener for concise document event handling ---
+    private static class SimpleDocListener implements DocumentListener {
+        private final Runnable action;
+        public SimpleDocListener(Runnable a) { this.action = a; }
+        public void insertUpdate(DocumentEvent e) { action.run(); }
+        public void removeUpdate(DocumentEvent e) { action.run(); }
+        public void changedUpdate(DocumentEvent e) { action.run(); }
     }
 }
