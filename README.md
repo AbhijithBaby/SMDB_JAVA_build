@@ -73,11 +73,11 @@ cd student-management-system-java
 
 ---
 
-## Screenshots
+## Screenshot
 
-(Screenshot_2025-10-18_12-57-39.png)
+![Student Management System GUI](Screenshot_2025-10-18_12-57-39.png)
+
 ---
-
 ## How It Works
 
 1. On startup, the app checks for `student.db` and creates it if not found.  
