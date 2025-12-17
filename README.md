@@ -91,10 +91,13 @@ cd student-management-system-java
 
 ```
 src/
- └── com/
-      └── StudentManagement/
-          ├── Database.java          # Handles SQLite operations
-          └── StudentManagement.java # GUI + logic
+  └── com/
+       └── StudentManagement/
+           ├── Database.java          # Handles SQLite operations
+           └── StudentManagement.java # GUI + logic for admin page 
+           └── StudentView.java       # GUI + logic for student page 
+           └── RequestsDialog.java    # request management logic
+           └── login.java             # login page GUI
 ```
 
 ---
